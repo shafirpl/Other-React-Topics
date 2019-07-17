@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react';
+import MissionKey from './MissionKey.jsx';
 
 //gql is the one that is used to make the query
 import gql from 'graphql-tag';
@@ -29,6 +30,7 @@ export class Launches extends Component {
         return (
             <Fragment>
                 <h1 className="display-4 my-3"> Launches </h1>
+                <MissionKey />
                 <Query query = {LAUNCHES_QUERY}>
                     {
                         /*
