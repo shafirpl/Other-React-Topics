@@ -1,4 +1,12 @@
-const { GraphQLObjectType, GraphQLInt, GraphQLString, GraphQLBoolean } = require("graphql");
+const axios = require('axios');
+const {
+  GraphQLObjectType,
+  GraphQLInt,
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLList,
+  GraphQLSchema
+} = require("graphql");
 
 /*
  * We will have two object types
@@ -14,10 +22,89 @@ const LaunchType = new GraphQLObjectType({
     flight_number: { type: GraphQLInt },
     mission_name: { type: GraphQLString },
     launch_year: { type: GraphQLString },
-    launch_date_local: { type: GraphQLString},
+    launch_date_local: { type: GraphQLString },
     launch_success: { type: GraphQLBoolean },
-    flight_number: { type: RocketType }
+    rocket: { type: RocketType }
   })
 });
 
 // Rocket type is a data of type itself
+
+// Rocket Type
+const RocketType = new GraphQLObjectType({
+  name: "Rocket",
+  fields: () => ({
+    rocket_id: { type: GraphQLString },
+    rocket_name: { type: GraphQLString },
+    rocket_type: { type: GraphQLString }
+  })
+});
+
+//root query they are the end points for graphql
+const RootQuery = new GraphQLObjectType({
+  name: "RootQueryType",
+  fields: {
+    launches: {
+      // we have to give the list a type as well
+      type: new GraphQLList(LaunchType),
+      /*
+       * this is actually a fucntion
+       * This is where we actually get our data
+       * It takes two arguments
+       */
+      resolve(parent, args) {
+        /*
+         * Here we are getting the data from
+         * spacex api
+         */
+        return axios
+          .get("https://api.spacexdata.com/v3/launches/")
+          .then(res => res.data);
+      }
+    },
+    launch: {
+      type: LaunchType,
+      args: {
+        flight_number: { type: GraphQLInt }
+      },
+      resolve(parent, args) {
+        return axios
+          .get(`https://api.spacexdata.com/v3/launches/${args.flight_number}`)
+          .then(res => res.data);
+      }
+    },
+    rockets: {
+      // we have to give the list a type as well
+      type: new GraphQLList(RocketType),
+      /*
+       * this is actually a fucntion
+       * This is where we actually get our data
+       * It takes two arguments
+       */
+      resolve(parent, args) {
+        /*
+         * Here we are getting the data from
+         * spacex api
+         */
+        return axios
+          .get("https://api.spacexdata.com/v3/rockets/")
+          .then(res => res.data);
+      }
+    },
+    rocket: {
+      type: RocketType,
+      args: {
+        id: { type: GraphQLInt }
+      },
+      resolve(parent, args) {
+        return axios
+          .get(`https://api.spacexdata.com/v3/rockets/${args.id}`)
+          .then(res => res.data);
+      }
+    }
+  }
+});
+
+module.exports = new GraphQLSchema({
+    query: RootQuery
+})
